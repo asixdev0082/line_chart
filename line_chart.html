@@ -1,0 +1,100 @@
+<html>
+  <head>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['corechart']});
+      google.charts.setOnLoadCallback(drawChart);
+
+      function drawChart() {
+        var data = google.visualization.arrayToDataTable([
+          ['Year', 'Sales', 'Expenses'],
+          ['2004',  1000,      400],
+          ['2005',  1170,      460],
+          ['2006',  660,       1120],
+          ['2007',  1030,      540]
+        ]);
+
+        var options = {
+          title: 'Company Performance',
+          curveType: 'function',
+          legend: { position: 'bottom' }
+        };
+
+        var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
+
+        chart.draw(data, options);
+      }
+    </script>
+  </head>
+  <body>
+    <div id="curve_chart" style="width: 900px; height: 500px"></div>
+  </body>
+</html>
+<!--<head>
+    <script src="https://cdn.plot.ly/plotly-2.25.2.min.js" charset="utf-8"></script>
+</head>
+<body>
+    <div id="gd"></div>
+
+    <script>
+        var data = [{
+            y: [1, 2, 3],
+            type: 'scatter',
+            mode: 'lines+markers',
+            line: {
+                color: 'blue'
+            },
+            marker: {
+                size: 10
+            },
+            hovertemplate: '<b>%{y}</b><extra></extra>'
+        }];
+
+        var layout = {
+            width: 600,
+            height: 400,
+            xaxis: {
+                fixedrange: true // disable panning and zooming on x-axis
+            },
+            yaxis: {
+                fixedrange: false, // enable panning and zooming on y-axis
+                range: [0, 300000000], // set the y-axis range
+                autorange: false // disable auto-ranging of y-axis
+            },
+            dragmode: 'pan', // enable panning
+            hovermode: 'closest', // show tooltip for closest point
+        };
+
+        Plotly.newPlot('gd', data, layout);
+
+        // Add event listener for adding new points
+        var gd = document.getElementById('gd');
+        gd.on('plotly_click', function(data) {
+            var x = data.points[0].x;
+            var y = data.points[0].y;
+            var update = {
+                x: [[x]],
+                y: [[y]],
+                mode: 'markers',
+                marker: {
+                    color: 'red',
+                    size: 10
+                },
+                hovertemplate: '<b>%{y}</b><extra></extra>'
+            };
+            Plotly.addTraces('gd', update);
+        });
+
+        // Add event listener for removing last point
+        window.addEventListener('keydown', function(event) {
+            if (event.key === 'Backspace') {
+                var update = {
+                    x: [[]],
+                    y: [[]]
+                };
+                Plotly.update('gd', update);
+            }
+        });
+    </script>
+</body>
+-->
