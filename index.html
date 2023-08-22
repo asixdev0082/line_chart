@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"> 
+		<style type="text/css">
+			.line { fill: none; }	
+			#tooltip {
+				text-align: left;
+				position: absolute;
+				width: 150px;
+				height: auto;
+				padding: 10px;
+				background-color: white;
+				-webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+				-moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+				box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+				pointer-events: none;
+			}
+			#tooltip.hidden {
+				display: none;
+			}
+			#tooltip p {
+				margin: 10;
+				font-family: sans-serif;
+				font-size: 14px;
+			}
+			#tooltip .title {
+				/* text-decoration: underline; */
+				font-size: 14px;
+			}
+			.commit-circle, .legend-circle {
+				stroke-width: 0.22em;
+			}
+			.commit-circle.selected, .legend-circle.selected {
+				stroke-width: 0.40em;
+			}
+			body {
+				font: 10px sans-serif;
+				margin: 50px;
+				text-align: center;
+			}
+			
+			.grid .tick {
+				stroke: lightgrey;
+				opacity: 0.7;
+				shape-rendering: crispEdges;
+			}
+			
+			.grid path {
+				stroke-width: 0;
+			}
+			
+			.axis path {
+				fill: none;
+				stroke: #bbb;
+				shape-rendering: crispEdges;
+			}
+			
+			.axis text {
+				fill: #555;
+			}
+			
+			.axis line {	
+				stroke: #e7e7e7;
+				shape-rendering: crispEdges;
+			}
+			
+			.axis .axis-label {
+				font-size: 14px;
+			}
+			
+			.line {
+				fill: none;
+				stroke-width: 1.5px;
+			}
+			
+			.dot {
+				/* consider the stroke-with the mouse detect radius? */
+				stroke: transparent;
+				stroke-width: 10px;  
+				cursor: pointer;
+			}
+			
+			.dot:hover {
+				stroke: rgba(68, 127, 255, 0.3);
+			}
+ 
+		</style>	
+	</head>
+		<body>
+			<div id="example" style="text-align : center;">
+				<h1>Example Graph</h1>
+			</div>
+			<div id="tooltip" class="hidden">
+				<p class="title"></p>
+				<p class="desc"></p>
+				<ul class="values"></ul>
+			</div>
+
+			<script src="https://d3js.org/d3.v3.min.js"></script>
+			<script type="text/javascript" src="./d3-line-chart.js" charset="utf-8"></script>
+			<script type="text/javascript">
+				//************************************************************
+				// Data notice the structure
+				//************************************************************
+				var data = 	[
+					[{'x':2,'y':250000000},{'x':6,'y':500000000},{'x':11,'y':1265721788},{'x':17,'y':1265123788},{'x':21,'y':230020000},{'x':25,'y':2000000000}],
+				];
+				
+				var colors = ['steelblue']
+
+				//************************************************************
+				// Create Margins and Axis and hook our zoom function
+				//************************************************************
+				var margin = {top: 20, right: 30, bottom: 30, left: 100},
+				width = 960 - margin.left - margin.right,
+				height = 500 - margin.top - margin.bottom;
+	
+
+				var xScale = d3.scale.linear().domain([0, 31]).range([1, width]);
+				var yScale = d3.scale.linear().domain([0, 3000000000]).range([height, 0]);
+
+				var xAxis = d3.svg.axis()
+							.scale(xScale).tickSize(-height)
+							.tickPadding(10).tickSubdivide(true).orient("bottom");
+				var yAxis = d3.svg.axis()
+							.scale(yScale).tickSize(-width)
+							.tickPadding(10).tickSubdivide(true).orient("left");
+				var zoom = d3.behavior.zoom().x(xScale).y(yScale).scaleExtent([1, 10]).on("zoom", 
+							function () {
+								svg.select(".x.axis").call(xAxis);
+								svg.select(".y.axis").call(yAxis);   
+								svg.selectAll('path.line').attr('d', line);  
+							
+								points.selectAll('circle').attr("transform", function(d) { 
+									return "translate(" + xScale(d.point.x) + "," + yScale(d.point.y) + ")"; 
+								})
+							});	
+				//*********************************************************
+				// Generate our SVG object
+				//*********************************************************
+				var svg = d3.select("body").append("svg")
+							.call(zoom)
+							.attr("width", width + margin.left + margin.right)
+							.attr("height", height + margin.top + margin.bottom)
+							.append("g")
+							.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+				svg.append("g")
+					.attr("class", "x axis")
+					.attr("transform", "translate(0," + height + ")")
+					.call(xAxis);
+
+				svg.append("g")
+					.attr("class", "y axis")
+					.call(yAxis);
+
+
+				svg.append("clipPath")
+					.attr("id", "clip")
+					.append("rect")
+					.attr("width", width)
+					.attr("height", height);
+				//*********************************************************
+				// Create D3 line object and draw data on our SVG object
+				//*********************************************************
+				var line = d3.svg.line()
+					.interpolate("linear")	
+					.x(function(d) { return xScale(d.x); })
+					.y(function(d) { return yScale(d.y); });		
+					
+				svg.selectAll('.line')
+					.data(data)
+					.enter()
+					.append("path")
+					.attr("class", "line")
+					.attr("clip-path", "url(#clip)")
+					.attr('stroke', function(d,i){ 			
+						return colors[i%colors.length];
+					})
+					.attr("d", line);		
+				//************************************************************
+				// Draw points on SVG object based on the data given
+				//************************************************************
+				var points = [];
+				svg = d3.select("svg").on("click", function() {
+						var coords = d3.mouse(this);
+						data= [{'x' : coords[0], 'y' : coords[1]}];
+						svg.append("circle")
+							.attr("cx", data[0]['x'])
+							.attr("cy", data[0]['y'])
+							.attr('class','dot')
+							.attr("r", 2.5)
+							.style("fill", "steelblue");
+						points.push(data[0]);
+					});
+				// var points = svg.selectAll('.dots')
+				// 			.data(data)
+				// 			.enter()
+				// 			.append("g")
+				// 			.attr("class", "dots")
+				// 			.attr("clip-path", "url(#example)");
+				// points.selectAll('.dot')
+				// 	.data(function(d, index){ 		
+				// 		var a = [];
+				// 		d.forEach(function(point,i){
+				// 			a.push({'index': index, 'point': point});
+				// 		});		
+				// 		return a;
+				// 	})
+				// 	.enter()
+				// 	.append('circle')
+				// 	.attr('class','dot')
+				// 	.attr("r", 2.5)
+				// 	.attr('fill', function(d,i){ 	
+				// 		return colors[d.index%colors.length];
+				// 	})	
+				// 	.attr("transform", function(d) { 
+				// 		return "translate(" + xScale(d.point.x) + "," + yScale(d.point.y) + ")"; }
+				// 	)
+				// 	.on("mouseover", function(d) {
+				// 		console.log("d = ", d);
+				// 		var xPosition = d3.event.pageX + 10;
+				// 		var yPosition = d3.event.pageY;
+				// 		d3.select(this).classed("selected", true);
+				// 		var tooltip = d3.select("#tooltip").style("left", xPosition + "px").style("top", yPosition + "px");;
+				// 		tooltip.select(".title").text("X-axis " + d.point.x);
+				// 		tooltip.select(".desc").text("Y-axis: " + d.point.y);
+				// 		tooltip.select(".values").selectAll("li").remove();
+				// 		tooltip.classed("hidden", false);
+				// 	})
+				// 	.on("mouseout", function(d) {
+				// 		d3.select(this).classed("selected", false);
+				// 		var tooltip = d3.select("#tooltip");
+        		// 		tooltip.classed("hidden", true);
+				// 	});
+			</script>
+		</body>
+</html>
