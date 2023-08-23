@@ -109,20 +109,21 @@
 				//************************************************************
 				// Create Margins and Axis and hook our zoom function
 				//************************************************************
-				var margin = {top: 20, right: 30, bottom: 30, left: 50},
+				var margin = {top: 20, right: 30, bottom: 30, left: 70},
 					width = 960 - margin.left - margin.right,
 					height = 500 - margin.top - margin.bottom;
 					
 				var xScale = d3.scale.linear()
-					.domain([0, 12])
+					.domain([1, 31])
 					.range([0, width]);
 				
 				var yScale = d3.scale.linear()
-					.domain([ 0, 30])
+					.domain([ 0, 300000000])
 					.range([height, 0]);
 					
 				var xAxis = d3.svg.axis()
 					.scale(xScale)
+					.ticks(31)
 					.tickSize(-height)
 					.tickPadding(10)	
 					.tickSubdivide(true)	
@@ -185,9 +186,7 @@
 				//************************************************************
 				// Draw points on SVG object based on the data given
 				//************************************************************
-				var pointArray = [];
-				var points;
-				points = svg.selectAll('.dots')
+				var points = svg.selectAll('.dots')
 					.data(data)
 					.enter()
 					.append("g")
@@ -206,28 +205,35 @@
 					.append('circle')
 					.attr('class','dot')
 					.attr("r", 5)
-					.attr('fill', 'steelblue')	
 					.attr("transform", function(d) { 
 						return "translate(" + (xScale(d.point.x)) + "," + (yScale(d.point.y)) + ")"; }
 					)
+				//************************************************************
+				// When click mouse, Draw points on SVG object based on the data given
+				//*************************************************************
+				var pointArray = [];	
+				var cnt = 0;
 				svg = d3.select("svg").on("click", function() {
+					cnt ++;
 					var coords = d3.mouse(this);
 					var newPoint = {'x' : xScale.invert(coords[0] - margin.left), 'y' : yScale.invert(coords[1] - margin.top)};
+					
 					pointArray.push(newPoint);
-				
+					console.log("cnt = ", cnt, "pointArray = ", pointArray);
+					
 					points.selectAll('.dot')
 						.data(pointArray)
 						.enter()
 						.append('circle')
 						.attr('class','dot')
+						.attr('fill', 'steelblue')
 						.attr("r", 5)
-						.attr('fill', 'steelblue')	
 						.attr("transform", function(d) { 
 							return "translate(" + xScale(d.x) + "," + yScale(d.y) + ")"; }
 						)
 						.on("mouseover", function(d) {
 							var format = d3.format(".2f");
-							var tooltipPointX = format(xScale.invert(xScale(d.x)));
+							var tooltipPointX = parseInt(xScale.invert(xScale(d.x)));
 							var tooltipPointY = format(yScale.invert(yScale(d.y)));
 							var xPosition = d3.event.pageX + 10;
 							var yPosition = d3.event.pageY;
@@ -243,6 +249,7 @@
 							var tooltip = d3.select("#tooltip");
 							tooltip.classed("hidden", true);
 						});
+					
 					svg.select(".line")
 						.datum(pointArray)
 						.attr("d", line);
@@ -251,15 +258,11 @@
 				// Zoom specific updates
 				//************************************************************
 				function zoomed() {
-					console.log("!!!!!");;
 					svg.select(".x.axis").call(xAxis);
 					svg.select(".y.axis").call(yAxis);   
 					svg.selectAll('path.line').attr('d', line);  
-					console.log("points = ", points);
 					points.selectAll('circle')
 						.attr("transform", function(d) { 
-							console.log("d zoom = ", d);
-							// return "translate(" + (xScale(d.point.x) + margin.left) + "," + (yScale(d.point.y) + margin.top) + ")"; 
 							return "translate(" + (xScale(d.x)) + "," + (yScale(d.y)) + ")";
 						}
 					);  
