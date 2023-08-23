@@ -100,74 +100,78 @@
 			<script src="https://d3js.org/d3.v3.min.js"></script>
 			<script type="text/javascript" src="./d3-line-chart.js" charset="utf-8"></script>
 			<script type="text/javascript">
+				
 				//************************************************************
 				// Data notice the structure
 				//************************************************************
-				var data = 	[
-					[{'x':2,'y':250000000},{'x':6,'y':500000000},{'x':11,'y':1265721788},{'x':17,'y':1265123788},{'x':21,'y':230020000},{'x':25,'y':2000000000}],
-				];
+				var data = 	[[]];
 				
-				var colors = ['steelblue']
-
 				//************************************************************
 				// Create Margins and Axis and hook our zoom function
 				//************************************************************
-				var margin = {top: 20, right: 30, bottom: 30, left: 100},
-				width = 960 - margin.left - margin.right,
-				height = 500 - margin.top - margin.bottom;
-	
-
-				var xScale = d3.scale.linear().domain([0, 31]).range([1, width]);
-				var yScale = d3.scale.linear().domain([0, 3000000000]).range([height, 0]);
-
+				var margin = {top: 20, right: 30, bottom: 30, left: 50},
+					width = 960 - margin.left - margin.right,
+					height = 500 - margin.top - margin.bottom;
+					
+				var xScale = d3.scale.linear()
+					.domain([0, 12])
+					.range([0, width]);
+				
+				var yScale = d3.scale.linear()
+					.domain([ 0, 30])
+					.range([height, 0]);
+					
 				var xAxis = d3.svg.axis()
-							.scale(xScale).tickSize(-height)
-							.tickPadding(10).tickSubdivide(true).orient("bottom");
+					.scale(xScale)
+					.tickSize(-height)
+					.tickPadding(10)	
+					.tickSubdivide(true)	
+					.orient("bottom");	
+					
 				var yAxis = d3.svg.axis()
-							.scale(yScale).tickSize(-width)
-							.tickPadding(10).tickSubdivide(true).orient("left");
-				var zoom = d3.behavior.zoom().x(xScale).y(yScale).scaleExtent([1, 10]).on("zoom", 
-							function () {
-								svg.select(".x.axis").call(xAxis);
-								svg.select(".y.axis").call(yAxis);   
-								svg.selectAll('path.line').attr('d', line);  
-							
-								points.selectAll('circle').attr("transform", function(d) { 
-									return "translate(" + xScale(d.point.x) + "," + yScale(d.point.y) + ")"; 
-								})
-							});	
+					.scale(yScale)
+					.tickPadding(10)
+					.tickSize(-width)
+					.tickSubdivide(true)	
+					.orient("left");
+					
+				var zoom = d3.behavior.zoom()
+					.x(xScale)
+					.y(yScale)
+					.scaleExtent([1, 10])
+					.on("zoom", zoomed);	
 				//*********************************************************
 				// Generate our SVG object
 				//*********************************************************
 				var svg = d3.select("body").append("svg")
-							.call(zoom)
-							.attr("width", width + margin.left + margin.right)
-							.attr("height", height + margin.top + margin.bottom)
-							.append("g")
-							.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
+					.call(zoom)
+					.attr("width", width + margin.left + margin.right)
+					.attr("height", height + margin.top + margin.bottom)
+					.append("g")
+					.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+				
 				svg.append("g")
 					.attr("class", "x axis")
 					.attr("transform", "translate(0," + height + ")")
 					.call(xAxis);
-
+				
 				svg.append("g")
 					.attr("class", "y axis")
 					.call(yAxis);
-
-
+				
 				svg.append("clipPath")
 					.attr("id", "clip")
 					.append("rect")
 					.attr("width", width)
 					.attr("height", height);
+									
 				//*********************************************************
 				// Create D3 line object and draw data on our SVG object
 				//*********************************************************
 				var line = d3.svg.line()
 					.interpolate("linear")	
-					.x(function(d) { return xScale(d.x); })
-					.y(function(d) { return yScale(d.y); });		
+					.x(function(d) { return (xScale(d.x)); })
+					.y(function(d) { return (yScale(d.y)) ; });		
 					
 				svg.selectAll('.line')
 					.data(data)
@@ -175,65 +179,91 @@
 					.append("path")
 					.attr("class", "line")
 					.attr("clip-path", "url(#clip)")
-					.attr('stroke', function(d,i){ 			
-						return colors[i%colors.length];
-					})
+					.attr('stroke', 'steelblue')
 					.attr("d", line);		
+								
 				//************************************************************
 				// Draw points on SVG object based on the data given
 				//************************************************************
-				var points = [];
+				var pointArray = [];
+				var points;
+				points = svg.selectAll('.dots')
+					.data(data)
+					.enter()
+					.append("g")
+					.attr("class", "dots")
+					.attr("clip-path", "url(#clip)");	
+			
+				points.selectAll('.dot')
+					.data(function(d, index){ 		
+						var a = [];
+						d.forEach(function(point,i){
+							a.push({'index': index, 'point': point});
+						});		
+						return a;
+					})
+					.enter()
+					.append('circle')
+					.attr('class','dot')
+					.attr("r", 5)
+					.attr('fill', 'steelblue')	
+					.attr("transform", function(d) { 
+						return "translate(" + (xScale(d.point.x)) + "," + (yScale(d.point.y)) + ")"; }
+					)
 				svg = d3.select("svg").on("click", function() {
-						var coords = d3.mouse(this);
-						data= [{'x' : coords[0], 'y' : coords[1]}];
-						svg.append("circle")
-							.attr("cx", data[0]['x'])
-							.attr("cy", data[0]['y'])
-							.attr('class','dot')
-							.attr("r", 2.5)
-							.style("fill", "steelblue");
-						points.push(data[0]);
-					});
-				// var points = svg.selectAll('.dots')
-				// 			.data(data)
-				// 			.enter()
-				// 			.append("g")
-				// 			.attr("class", "dots")
-				// 			.attr("clip-path", "url(#example)");
-				// points.selectAll('.dot')
-				// 	.data(function(d, index){ 		
-				// 		var a = [];
-				// 		d.forEach(function(point,i){
-				// 			a.push({'index': index, 'point': point});
-				// 		});		
-				// 		return a;
-				// 	})
-				// 	.enter()
-				// 	.append('circle')
-				// 	.attr('class','dot')
-				// 	.attr("r", 2.5)
-				// 	.attr('fill', function(d,i){ 	
-				// 		return colors[d.index%colors.length];
-				// 	})	
-				// 	.attr("transform", function(d) { 
-				// 		return "translate(" + xScale(d.point.x) + "," + yScale(d.point.y) + ")"; }
-				// 	)
-				// 	.on("mouseover", function(d) {
-				// 		console.log("d = ", d);
-				// 		var xPosition = d3.event.pageX + 10;
-				// 		var yPosition = d3.event.pageY;
-				// 		d3.select(this).classed("selected", true);
-				// 		var tooltip = d3.select("#tooltip").style("left", xPosition + "px").style("top", yPosition + "px");;
-				// 		tooltip.select(".title").text("X-axis " + d.point.x);
-				// 		tooltip.select(".desc").text("Y-axis: " + d.point.y);
-				// 		tooltip.select(".values").selectAll("li").remove();
-				// 		tooltip.classed("hidden", false);
-				// 	})
-				// 	.on("mouseout", function(d) {
-				// 		d3.select(this).classed("selected", false);
-				// 		var tooltip = d3.select("#tooltip");
-        		// 		tooltip.classed("hidden", true);
-				// 	});
+					var coords = d3.mouse(this);
+					var newPoint = {'x' : xScale.invert(coords[0] - margin.left), 'y' : yScale.invert(coords[1] - margin.top)};
+					pointArray.push(newPoint);
+				
+					points.selectAll('.dot')
+						.data(pointArray)
+						.enter()
+						.append('circle')
+						.attr('class','dot')
+						.attr("r", 5)
+						.attr('fill', 'steelblue')	
+						.attr("transform", function(d) { 
+							return "translate(" + xScale(d.x) + "," + yScale(d.y) + ")"; }
+						)
+						.on("mouseover", function(d) {
+							var format = d3.format(".2f");
+							var tooltipPointX = format(xScale.invert(xScale(d.x)));
+							var tooltipPointY = format(yScale.invert(yScale(d.y)));
+							var xPosition = d3.event.pageX + 10;
+							var yPosition = d3.event.pageY;
+							d3.select(this).classed("selected", true);
+							var tooltip = d3.select("#tooltip").style("left", xPosition + "px").style("top", yPosition + "px");
+							tooltip.select(".title").text("X-axis " + tooltipPointX);
+							tooltip.select(".desc").text("Y-axis: " + tooltipPointY);
+							tooltip.select(".values").selectAll("li").remove();
+							tooltip.classed("hidden", false);
+						})
+						.on("mouseout", function(d) {
+							d3.select(this).classed("selected", false);
+							var tooltip = d3.select("#tooltip");
+							tooltip.classed("hidden", true);
+						});
+					svg.select(".line")
+						.datum(pointArray)
+						.attr("d", line);
+				});
+				//************************************************************
+				// Zoom specific updates
+				//************************************************************
+				function zoomed() {
+					console.log("!!!!!");;
+					svg.select(".x.axis").call(xAxis);
+					svg.select(".y.axis").call(yAxis);   
+					svg.selectAll('path.line').attr('d', line);  
+					console.log("points = ", points);
+					points.selectAll('circle')
+						.attr("transform", function(d) { 
+							console.log("d zoom = ", d);
+							// return "translate(" + (xScale(d.point.x) + margin.left) + "," + (yScale(d.point.y) + margin.top) + ")"; 
+							return "translate(" + (xScale(d.x)) + "," + (yScale(d.y)) + ")";
+						}
+					);  
+				}
 			</script>
 		</body>
 </html>
