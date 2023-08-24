@@ -5,6 +5,7 @@
 		<style type="text/css">
 			.lastpointline {
 				fill : none;
+				stroke-width: 1.5px;
 				stroke: red;
 			}
 			.newpointline {
@@ -15,6 +16,7 @@
 			.availablepointline {
 				fill : none;
 				stroke: red;
+				stroke-width: 2px;
 				stroke-dasharray: 5, 5;
 			}
 			#tooltip {
@@ -97,15 +99,11 @@
 			.dot:hover {
 				stroke: rgba(68, 127, 255, 0.3);
 			}
-
-			.newdot {
-				/* consider the stroke-with the mouse detect radius? */
-				stroke: transparent;
-				stroke-width: 10px;  
-				cursor: pointer;
-			}
 			.dot:hover {
 				stroke: rgba(68, 127, 255, 0.3);
+			}
+			.availablelinedot {
+				fill: rgba(68, 127, 255, 0.3);
 			}
  
 		</style>	
@@ -217,6 +215,7 @@
 				//*********************************************************
 				// Create D3 line object and draw data on our SVG object
 				//*********************************************************
+				var circle = svg.append('circle');
 				var line = d3.svg.line()
 					.interpolate("linear")	
 					.x(function(d) { return (xScale(d.x)); })
@@ -261,7 +260,18 @@
 					.attr("class", "availablepointline")
 					.attr("clip-path", "url(#clip)")
 					.attr('stroke', 'red')
-					.attr("d", availablePointLine);
+					.attr("d", availablePointLine)
+					.on("mouseover", function(d) {
+						var coords = d3.mouse(this);
+						circle.attr("class", "availablelinedot")
+						.attr("cx", function(d) {return (coords[0]);})
+						.attr("cy", function(d) {return (coords[1]);})
+						.attr('r', 7)
+						.style("opacity", 1);
+					})
+					.on("mouseout", function(d) {
+						circle.style("opacity", 0);
+					});
 				
 				svg.selectAll('.newpointline')
 					.data([newPointLineArray])
@@ -294,7 +304,6 @@
 					)
 					.on("mouseover", function(d) {
 						var format = d3.format(".2f");
-						console.log("d mouse = ", d);
 						var tooltipPointX = parseInt(xScale.invert(xScale(d.x)));
 						var tooltipPointY = format(yScale.invert(yScale(d.y)));
 						var xPosition = d3.event.pageX + 10;
@@ -315,13 +324,15 @@
 				// When click mouse, Draw points on SVG object based on the data given
 				//*************************************************************
 				var newPoint = {};
+				var cnt = 0;
 				svg = d3.select("svg").on("mousedown", function() {
 						var coords = d3.mouse(this);
-						newPoint = {'x' : data.length + 1, 'y' : yScale.invert(coords[1] - margin.top)};
+						newPoint = {'x' : availablePointLineArray[0].x, 'y' : yScale.invert(coords[1] - margin.top)};
 
-						console.log("coords = ", newPoint.x);
-
-						if((parseFloat(xScale.invert(coords[0] - margin.left)) > newPoint.x - 0.1) && (parseFloat(xScale.invert(coords[0] - margin.left)) < newPoint.x + 0.1)) {
+						if((parseFloat(xScale.invert(coords[0] - margin.left)) > availablePointLineArray[0].x - 0.1) && 
+						(parseFloat(xScale.invert(coords[0] - margin.left)) < availablePointLineArray[0].x + 0.1)) {
+							if(cnt > 0)	 data.splice(data.length - 1, 1);
+							
 							data.push(newPoint);
 
 							points.selectAll('.dot')
@@ -336,7 +347,6 @@
 								)
 								.on("mouseover", function(d) {
 									var format = d3.format(".2f");
-									console.log("d mouse = ", d);
 									var tooltipPointX = parseInt(xScale.invert(xScale(d.x)));
 									var tooltipPointY = format(yScale.invert(yScale(d.y)));
 									var xPosition = d3.event.pageX + 10;
@@ -356,10 +366,6 @@
 
 							var lastLineXPos = data[data.length - 1].x;
 							var lastLineYPos = data[data.length - 1].y;
-							var availablePointLineXPos = parseInt(data[data.length - 1].x) + 1;
-
-							availablePointLineArray = [{'x' : availablePointLineXPos, 'y' : -1000000000}, {'x' : availablePointLineXPos, 'y' : 1000000000}];
-
 
 							newPointLineArray = data.slice(0, data.length - 1);
 
@@ -376,12 +382,9 @@
 								.datum(lastPointLineArray)
 								.attr('stroke', 'red')
 								.attr("d", lastPointLine);
-							}							
+							}
+							cnt ++;
 
-							// svg.select(".availablepointline")
-							// 	.datum(availablePointLineArray)
-							// 	.attr('stroke', 'red')
-							// 	.attr("d", availablePointLine);
 						}
 							
 					}
