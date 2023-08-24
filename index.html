@@ -8,6 +8,11 @@
 				fill : none;
 				stroke: red;
 			}
+			.availablepointline {
+				fill : none;
+				stroke: red;
+				stroke-dasharray: 5, 5;
+			}
 			#tooltip {
 				text-align: left;
 				position: absolute;
@@ -111,6 +116,7 @@
 				var data = 	[[]];
 				var lastLineArray = [[]];
 				var lastPointLineArray = [[]];
+				var availablePointLineArray = [[]];
 				
 				//************************************************************
 				// Create Margins and Axis and hook our zoom function
@@ -190,6 +196,11 @@
 					.x(function(d) {return (xScale(d.x)); })
 					.y(function(d) { return (yScale(d.y)); });
 
+				var availablePointLine = d3.svg.line()
+					.interpolate("linear")
+					.x(function(d) {return (xScale(d.x)); })
+					.y(function(d) { return (yScale(d.y)); });
+
 				svg.selectAll('.line')
 					.data(data)
 					.enter()
@@ -222,6 +233,17 @@
 						console.log("Point click! : ", d[i]);
 					})
 					.attr("d", lastPointLine);	
+
+				svg.selectAll('.availablepointline')
+					.data(availablePointLineArray)
+					.enter()
+					.append("path")
+					.attr("class", "availablepointline")
+					.attr("clip-path", "url(#clip)")
+					.on("click", function(d, i) {
+						console.log("Point click! 111: ", d[i]);
+					})
+					.attr("d", availablePointLine);
 								
 				//************************************************************
 				// Draw points on SVG object based on the data given
@@ -256,8 +278,8 @@
 				svg = d3.select("svg").on("mousedown", function() {
 						var coords = d3.mouse(this);
 						newPoint = {'x' : xScale.invert(coords[0] - margin.left), 'y' : yScale.invert(coords[1] - margin.top)};
-						
-						if(pointArray.length == 0 || newPoint.x > pointArray[pointArray.length - 1].x) {
+						console.log("newPoint = ", newPoint);
+						if(pointArray.length == 0 || parseInt(newPoint.x) == parseInt(pointArray[pointArray.length - 1].x) + 1) {
 							pointArray.push(newPoint);
 							console.log("pointArray = ", pointArray);
 							
@@ -292,8 +314,10 @@
 							
 							var lastLineXPos = pointArray[pointArray.length - 1].x;
 							var lastLineYPos = pointArray[pointArray.length - 1].y;
+							var availablePointLineXPos = parseInt(pointArray[pointArray.length - 1].x) + 1;
 
 							lastLineArray = [{'x' : lastLineXPos, 'y' : 0}, {'x' : lastLineXPos, 'y' : 300000000}];
+							availablePointLineArray = [{'x' : availablePointLineXPos, 'y' : 0}, {'x' : availablePointLineXPos, 'y' : 300000000}];
 
 							if(pointArray[pointArray.length - 2]) {
 								var lastPointLineXPos = pointArray[pointArray.length - 2].x;
@@ -310,12 +334,15 @@
 								.attr('stroke', 'steelblue')
 								.attr("d", line);
 
-							svg.select(".lastline")
-								.datum(lastLineArray)
-								.attr('stroke', 'grey')
-								.attr("d", lastLine);
+							// svg.select(".lastline")
+							// 	.datum(lastLineArray)
+							// 	.attr('stroke', 'grey')
+							// 	.attr("d", lastLine);
 
-							
+							svg.select(".availablepointline")
+								.datum(availablePointLineArray)
+								.attr('stroke', 'red')
+								.attr("d", availablePointLine);
 						}
 							
 					}
@@ -329,6 +356,7 @@
 					svg.selectAll('path.line').attr('d', line);  
 					svg.selectAll('path.lastline').attr('d', lastLine);  
 					svg.selectAll('path.lastpointline').attr('d', lastPointLine);  
+					svg.selectAll('path.availablepointline').attr('d', availablePointLine);  
 					points.selectAll('circle')
 						.attr("transform", function(d) { 
 							return "translate(" + (xScale(d.x)) + "," + (yScale(d.y)) + ")";
