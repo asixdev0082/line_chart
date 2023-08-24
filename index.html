@@ -3,10 +3,14 @@
 	<head>
 		<meta charset="utf-8"> 
 		<style type="text/css">
-			.lastline{ fill : none; stroke-dasharray: 5, 5;}
 			.lastpointline {
 				fill : none;
 				stroke: red;
+			}
+			.newpointline {
+				fill : none;
+				stroke-width: 1.5px;
+				stroke: steelblue;
 			}
 			.availablepointline {
 				fill : none;
@@ -93,6 +97,16 @@
 			.dot:hover {
 				stroke: rgba(68, 127, 255, 0.3);
 			}
+
+			.newdot {
+				/* consider the stroke-with the mouse detect radius? */
+				stroke: transparent;
+				stroke-width: 10px;  
+				cursor: pointer;
+			}
+			.dot:hover {
+				stroke: rgba(68, 127, 255, 0.3);
+			}
  
 		</style>	
 	</head>
@@ -113,10 +127,32 @@
 				//************************************************************
 				// Data notice the structure
 				//************************************************************
-				var data = 	[[]];
-				var lastLineArray = [[]];
-				var lastPointLineArray = [[]];
-				var availablePointLineArray = [[]];
+				var data = 	[{'x' : 1, 'y' : '25000000'},
+									{'x' : 2, 'y' : '255000000'},
+									{'x' : 3, 'y' : '85000000'},
+									{'x' : 4, 'y' : '30000000'},
+									{'x' : 5, 'y' : '120000000'},
+									{'x' : 6, 'y' : '225000000'},
+									{'x' : 7, 'y' : '60000000'},
+									{'x' : 8, 'y' : '210000000'},
+									{'x' : 9, 'y' : '215600000'},
+									{'x' : 10, 'y' : '13500000'},
+									{'x' : 11, 'y' : '40000000'},
+									{'x' : 12, 'y' : '265000000'},
+									{'x' : 13, 'y' : '35000000'},
+									{'x' : 14, 'y' : '83000000'},
+									{'x' : 15, 'y' : '112000000'},
+									{'x' : 16, 'y' : '270000000'},
+									{'x' : 17, 'y' : '47000000'},
+									{'x' : 18, 'y' : '25000000'},
+									{'x' : 19, 'y' : '50100000'},
+									{'x' : 20, 'y' : '155000000'}];
+				// var pointArray = [data[0][19]];	
+				
+				var lastPointLineArray = [];
+				var availablePointLineArray = [{'x': data[data.length - 1].x + 1, 'y' : -1000000000}, {'x' : data[data.length - 1].x + 1, 'y' : 1000000000}];
+
+				var newPointLineArray = [];
 				
 				//************************************************************
 				// Create Margins and Axis and hook our zoom function
@@ -185,11 +221,6 @@
 					.interpolate("linear")	
 					.x(function(d) { return (xScale(d.x)); })
 					.y(function(d) { return (yScale(d.y)) ; });
-
-				var lastLine = d3.svg.line()
-					.interpolate("linear")
-					.x(function(d) {return (xScale(d.x)); })
-					.y(function(d) { return (yScale(d.y)); });
 				
 				var lastPointLine = d3.svg.line()
 					.interpolate("linear")
@@ -201,49 +232,45 @@
 					.x(function(d) {return (xScale(d.x)); })
 					.y(function(d) { return (yScale(d.y)); });
 
+				var newPointLine = d3.svg.line()
+					.interpolate("linear")
+					.x(function(d) {return (xScale(d.x)); })
+					.y(function(d) { return (yScale(d.y)); });
+
 				svg.selectAll('.line')
-					.data(data)
+					.data([data])
 					.enter()
 					.append("path")
 					.attr("class", "line")
 					.attr("clip-path", "url(#clip)")
-					.on("click", function(d, i) {
-						console.log("Point click! : ", d[i]);
-					})
+					.attr('stroke', 'steelblue')
 					.attr("d", line);	
-					
-				svg.selectAll('.lastline')
-					.data(lastLineArray)
-					.enter()
-					.append("path")
-					.attr("class", "lastline")
-					.attr("clip-path", "url(#clip)")
-					.on("click", function(d, i) {
-						console.log("Point click! : ", d[i]);
-					})
-					.attr("d", lastLine);	
 
 				svg.selectAll('.lastpointline')
-					.data(lastPointLineArray)
+					.data([lastPointLineArray])
 					.enter()
 					.append("path")
 					.attr("class", "lastpointline")
 					.attr("clip-path", "url(#clip)")
-					.on("click", function(d, i) {
-						console.log("Point click! : ", d[i]);
-					})
 					.attr("d", lastPointLine);	
 
 				svg.selectAll('.availablepointline')
-					.data(availablePointLineArray)
+					.data([availablePointLineArray])
 					.enter()
 					.append("path")
 					.attr("class", "availablepointline")
 					.attr("clip-path", "url(#clip)")
-					.on("click", function(d, i) {
-						console.log("Point click! 111: ", d[i]);
-					})
+					.attr('stroke', 'red')
 					.attr("d", availablePointLine);
+				
+				svg.selectAll('.newpointline')
+					.data([newPointLineArray])
+					.enter()
+					.append("path")
+					.attr("class", "newpointline")
+					.attr("clip-path", "url(#clip)")
+					.attr('stroke', 'red')
+					.attr("d", newPointLine);
 								
 				//************************************************************
 				// Draw points on SVG object based on the data given
@@ -256,35 +283,49 @@
 					.attr("clip-path", "url(#clip)");	
 			
 				points.selectAll('.dot')
-					.data(function(d, index){ 		
-						var a = [];
-						d.forEach(function(point,i){
-							a.push({'index': index, 'point': point});
-						});		
-						return a;
-					})
+					.data(data)
 					.enter()
 					.append('circle')
 					.attr('class','dot')
 					.attr("r", 2.5)
+					.attr("fill", 'steelblue')
 					.attr("transform", function(d) { 
-						return "translate(" + (xScale(d.point.x)) + "," + (yScale(d.point.y)) + ")"; }
+						return "translate(" + (xScale(d.x)) + "," + (yScale(d.y)) + ")"; }
 					)
+					.on("mouseover", function(d) {
+						var format = d3.format(".2f");
+						console.log("d mouse = ", d);
+						var tooltipPointX = parseInt(xScale.invert(xScale(d.x)));
+						var tooltipPointY = format(yScale.invert(yScale(d.y)));
+						var xPosition = d3.event.pageX + 10;
+						var yPosition = d3.event.pageY;
+						d3.select(this).classed("selected", true);
+						var tooltip = d3.select("#tooltip").style("left", xPosition + "px").style("top", yPosition + "px");
+						tooltip.select(".title").text("X-axis " + tooltipPointX);
+						tooltip.select(".desc").text("Y-axis: " + tooltipPointY);
+						tooltip.select(".values").selectAll("li").remove();
+						tooltip.classed("hidden", false);
+					})
+					.on("mouseout", function(d) {
+						d3.select(this).classed("selected", false);
+						var tooltip = d3.select("#tooltip");
+						tooltip.classed("hidden", true);
+					});
 				//************************************************************
 				// When click mouse, Draw points on SVG object based on the data given
 				//*************************************************************
-				var pointArray = [];	
 				var newPoint = {};
 				svg = d3.select("svg").on("mousedown", function() {
 						var coords = d3.mouse(this);
-						newPoint = {'x' : xScale.invert(coords[0] - margin.left), 'y' : yScale.invert(coords[1] - margin.top)};
-						console.log("newPoint = ", newPoint);
-						if(pointArray.length == 0 || parseInt(newPoint.x) == parseInt(pointArray[pointArray.length - 1].x) + 1) {
-							pointArray.push(newPoint);
-							console.log("pointArray = ", pointArray);
-							
+						newPoint = {'x' : data.length + 1, 'y' : yScale.invert(coords[1] - margin.top)};
+
+						console.log("coords = ", newPoint.x);
+
+						if((parseFloat(xScale.invert(coords[0] - margin.left)) > newPoint.x - 0.1) && (parseFloat(xScale.invert(coords[0] - margin.left)) < newPoint.x + 0.1)) {
+							data.push(newPoint);
+
 							points.selectAll('.dot')
-								.data(pointArray)
+								.data(data)
 								.enter()
 								.append('circle')
 								.attr('class','dot')
@@ -295,6 +336,7 @@
 								)
 								.on("mouseover", function(d) {
 									var format = d3.format(".2f");
+									console.log("d mouse = ", d);
 									var tooltipPointX = parseInt(xScale.invert(xScale(d.x)));
 									var tooltipPointY = format(yScale.invert(yScale(d.y)));
 									var xPosition = d3.event.pageX + 10;
@@ -311,33 +353,30 @@
 									var tooltip = d3.select("#tooltip");
 									tooltip.classed("hidden", true);
 								});
-							
-							var lastLineXPos = pointArray[pointArray.length - 1].x;
-							var lastLineYPos = pointArray[pointArray.length - 1].y;
-							var availablePointLineXPos = parseInt(pointArray[pointArray.length - 1].x) + 1;
 
-							lastLineArray = [{'x' : lastLineXPos, 'y' : 0}, {'x' : lastLineXPos, 'y' : 300000000}];
-							availablePointLineArray = [{'x' : availablePointLineXPos, 'y' : 0}, {'x' : availablePointLineXPos, 'y' : 300000000}];
+							var lastLineXPos = data[data.length - 1].x;
+							var lastLineYPos = data[data.length - 1].y;
+							var availablePointLineXPos = parseInt(data[data.length - 1].x) + 1;
 
-							if(pointArray[pointArray.length - 2]) {
-								var lastPointLineXPos = pointArray[pointArray.length - 2].x;
-								var lastPointLineYPos = pointArray[pointArray.length - 2].y;
+							availablePointLineArray = [{'x' : availablePointLineXPos, 'y' : -1000000000}, {'x' : availablePointLineXPos, 'y' : 1000000000}];
+
+
+							newPointLineArray = data.slice(0, data.length - 1);
+
+							svg.select(".newpointline")
+								.datum(newPointLineArray)
+								.attr('stroke', 'steelblue')
+								.attr("d", newPointLine);
+
+							if(data[data.length - 2]) {
+								var lastPointLineXPos = data[data.length - 2].x;
+								var lastPointLineYPos = data[data.length - 2].y;
 								lastPointLineArray = [{'x' : lastPointLineXPos, 'y' : lastPointLineYPos}, {'x' : lastLineXPos, 'y' : lastLineYPos}];
 								svg.select(".lastpointline")
 								.datum(lastPointLineArray)
-								.attr('stroke', 'grey')
+								.attr('stroke', 'red')
 								.attr("d", lastPointLine);
 							}							
-							
-							svg.select(".line")
-								.datum(pointArray)
-								.attr('stroke', 'steelblue')
-								.attr("d", line);
-
-							// svg.select(".lastline")
-							// 	.datum(lastLineArray)
-							// 	.attr('stroke', 'grey')
-							// 	.attr("d", lastLine);
 
 							svg.select(".availablepointline")
 								.datum(availablePointLineArray)
@@ -354,12 +393,12 @@
 					svg.select(".x.axis").call(xAxis);
 					svg.select(".y.axis").call(yAxis);   
 					svg.selectAll('path.line').attr('d', line);  
-					svg.selectAll('path.lastline').attr('d', lastLine);  
+					svg.selectAll('path.newpointline').attr('d', newPointLine);  
 					svg.selectAll('path.lastpointline').attr('d', lastPointLine);  
 					svg.selectAll('path.availablepointline').attr('d', availablePointLine);  
 					points.selectAll('circle')
 						.attr("transform", function(d) { 
-							return "translate(" + (xScale(d.x)) + "," + (yScale(d.y)) + ")";
+								return "translate(" + (xScale(d.x)) + "," + (yScale(d.y)) + ")";
 						}
 					);  
 				}
