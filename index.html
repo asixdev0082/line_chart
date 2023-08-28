@@ -67,18 +67,34 @@
                   fill : false,
                   tension : 0.1,
                   data:[
-                    {x:'21', y : '0'},
+                    {x:'21', y : '-300000000'},
                     {x:'21', y : '300000000'}
                   ]
                 }]
               },
               options: {  
+				
                 hitDetectionRadius: 10, // increase hit detection radius
+				scales: {
+					y: {
+						ticks: {
+						callback: function(value, index, values) {
+							return value.toLocaleString('en-US', {maximumFractionDigits:0});
+						}
+						}
+					}
+				},
                 hover: {
                     animationDuration: 0
                 },
                 plugins: {
                   zoom: {
+					limits: {
+						y: {
+							min: -300000000,
+							max: 300000000
+						}
+					},
                     pan: {
                       enabled: true,
                       mode: 'xy'
