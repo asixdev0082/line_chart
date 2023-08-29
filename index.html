@@ -183,7 +183,7 @@
                     return;
                   }
                   // Update the chart
-
+				  const tooltip = document.querySelector('.tooltip');
                   circleX = myChart.scales.x.getValueForPixel(canvasPosition.x) + 1;
                   circleY = myChart.scales.y.getValueForPixel(canvasPosition.y);
                   if((circleX - 0.1) < 21 && (circleX + 0.1 ) > 21) {
@@ -191,13 +191,14 @@
                     ctx.arc((myChart.scales.x.getPixelForValue(20)), canvasPosition.y, 5, 0, 2 * Math.PI);
                     ctx.strokeStyle = 'red';
                     ctx.stroke();
-					const tooltip = document.querySelector('.tooltip');
 					tooltip.style.left = canvasPosition.x + 20 + 'px';
 					tooltip.style.top = canvasPosition.y + 'px';
 					tooltip.innerHTML = '<span class="tooltiptext">x: 21, y : '+ circleY +'</span>';
 					tooltip.style.display = 'block';
-					console.log("tooltip = ", tooltip);
                   }
+				  else {
+					tooltip.style.display = 'none';
+				  }
                   // Update the last mouse position
                   lastCanvasPosition = canvasPosition;
                   myChart.update();
