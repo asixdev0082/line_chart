@@ -119,25 +119,9 @@
                       pinch: {
                         enabled: true
                       },
-                      mode: 'y',
+                      mode: 'xy',
                     }
-                  },
-				  tooltip: {
-					enabled : true, 
-					intersect : false,
-					callbacks : {
-						label : function(context) {
-							var label = context.dataset.label || '';
-							if(label) {
-								label += ': ';
-							}
-							if(context.parsed.y != null) {
-								label += context.parsed.y;
-							}
-							return label;
-						}
-					}
-				  }
+                  }
                 },
                 onClick: function(event) {
                     // Get the clicked dataset index and data index
