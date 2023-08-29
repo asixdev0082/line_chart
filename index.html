@@ -6,7 +6,19 @@
       .chart-container {
           width: 1200px;
         }
-
+		.tooltip {
+			display: none;
+			position: absolute;
+			background-color: black;
+			color : white;
+			width : 220px;
+			padding: 5px;
+			text-align: center;
+			border-radius: 6px;
+			z-index: 1;
+			font-size: 12px;
+			font-family: 'Courier New', Courier, monospace;
+		}
       </style>	
     </head>
       <body>
@@ -17,6 +29,7 @@
         <div class="chart-container">
           <canvas id="myChart"></canvas>
           <button onclick="resetZoomBtn(myChart)">reset zoom</button>
+		  <div class="tooltip"></div>
         </div>
 
         <script>
@@ -106,9 +119,25 @@
                       pinch: {
                         enabled: true
                       },
-                      mode: 'xy',
+                      mode: 'y',
                     }
-                  }
+                  },
+				  tooltip: {
+					enabled : true, 
+					intersect : false,
+					callbacks : {
+						label : function(context) {
+							var label = context.dataset.label || '';
+							if(label) {
+								label += ': ';
+							}
+							if(context.parsed.y != null) {
+								label += context.parsed.y;
+							}
+							return label;
+						}
+					}
+				  }
                 },
                 onClick: function(event) {
                     // Get the clicked dataset index and data index
@@ -154,18 +183,24 @@
                     return;
                   }
                   // Update the chart
-                  myChart.update();
 
                   circleX = myChart.scales.x.getValueForPixel(canvasPosition.x) + 1;
                   circleY = myChart.scales.y.getValueForPixel(canvasPosition.y);
                   if((circleX - 0.1) < 21 && (circleX + 0.1 ) > 21) {
                     ctx.beginPath();
                     ctx.arc((myChart.scales.x.getPixelForValue(20)), canvasPosition.y, 5, 0, 2 * Math.PI);
-                    ctx.fillStyle = 'red';
-                    ctx.fill();
+                    ctx.strokeStyle = 'red';
+                    ctx.stroke();
+					const tooltip = document.querySelector('.tooltip');
+					tooltip.style.left = canvasPosition.x + 20 + 'px';
+					tooltip.style.top = canvasPosition.y + 'px';
+					tooltip.innerHTML = '<span class="tooltiptext">x: 21, y : '+ circleY +'</span>';
+					tooltip.style.display = 'block';
+					console.log("tooltip = ", tooltip);
                   }
                   // Update the last mouse position
                   lastCanvasPosition = canvasPosition;
+                  myChart.update();
 
                 }
               }
@@ -179,6 +214,9 @@
               chart.resetZoom()
               
             };
+ 			// Chart.Tooltip.positioners.myCustomPositioner = function(elements, eventPosition) {
+			// 	console.log("elements = ", eventPosition);
+			// }
 
             // myChart.canvas.addEventListener('mousemove', (event) => {
             // 	// const point = chart.getElementAtEvent(event)[0];
